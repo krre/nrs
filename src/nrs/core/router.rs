@@ -1,5 +1,7 @@
-use axum::routing::IntoMakeService;
+use axum::routing::{post, IntoMakeService};
 use sqlx::{Pool, Postgres};
+
+use crate::api;
 
 pub struct Router {
     axum_router: axum::Router,
@@ -7,7 +9,9 @@ pub struct Router {
 
 impl Router {
     pub fn new(pool: Pool<Postgres>) -> Self {
-        let router = axum::Router::new().with_state(pool);
+        let router = axum::Router::new()
+            .route("/users", post(api::user::create_user))
+            .with_state(pool);
 
         Self {
             axum_router: router,

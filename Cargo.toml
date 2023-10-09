@@ -1,0 +1,18 @@
+[package]
+name = "nrs"
+version = "0.1.0"
+authors = ["Vladimir Zarypov <krre31@gmail.com>"]
+edition = "2021"
+
+[lib]
+name = "nds"
+path = "src/nrs/lib.rs"
+
+[dependencies]
+axum = "0.6.20"
+clap = { version = "4.4.4", features = ["env", "derive"] }
+dotenv = "0.15.0"
+env_logger = "0.10.0"
+log = "0.4.20"
+sqlx = { version = "0.7.1", features = ["postgres", "runtime-tokio-rustls"] }
+tokio = { version = "1.32.0", features = ["full"] }

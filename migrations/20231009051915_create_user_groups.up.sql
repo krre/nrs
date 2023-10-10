@@ -18,5 +18,5 @@ CREATE TABLE IF NOT EXISTS users (
     updated_ts timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX email_idx ON users (email);
-CREATE INDEX token_idx ON users (token);
+CREATE INDEX users_email_idx ON users (email);
+CREATE INDEX users_token_idx ON users (token);

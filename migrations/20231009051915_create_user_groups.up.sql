@@ -13,10 +13,9 @@ CREATE TABLE IF NOT EXISTS users (
     group_id INT NOT NULL DEFAULT 1 REFERENCES user_groups(id) ON DELETE CASCADE ON UPDATE CASCADE,
     name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
-    token TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL UNIQUE,
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE INDEX users_email_idx ON users (email);
-CREATE INDEX users_token_idx ON users (token);

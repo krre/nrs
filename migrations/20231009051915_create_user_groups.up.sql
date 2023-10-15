@@ -11,6 +11,7 @@ INSERT INTO user_groups (name, role) VALUES('Users', 1);
 CREATE TABLE IF NOT EXISTS users (
     id serial PRIMARY KEY,
     group_id INT NOT NULL DEFAULT 1 REFERENCES user_groups(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    sign TEXT NOT NULL,
     name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL UNIQUE,

@@ -19,6 +19,8 @@ pub struct Config {
     database_url: String,
     #[clap(long, env)]
     rust_log: String,
+    #[clap(long, env)]
+    jwt_secret: String,
 }
 
 pub struct Application {
@@ -44,7 +46,7 @@ impl Application {
             self.config.port
         );
 
-        let router = router::Router::new(pool);
+        let router = router::Router::new(pool, &self.config.jwt_secret);
 
         axum::Server::bind(&SocketAddr::new(
             IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)),

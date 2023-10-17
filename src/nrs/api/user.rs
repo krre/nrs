@@ -1,11 +1,16 @@
+use std::sync::Arc;
+
 use axum::{
     extract::{self, State},
     http::StatusCode,
-    response::IntoResponse,
+    Extension, Json,
 };
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
+
+use crate::core::jwt;
+use crate::core::router::JwtExt;
 
 #[derive(Deserialize)]
 pub struct CreateUser {
@@ -18,11 +23,16 @@ pub struct CreateUser {
 struct User {
     id: i32,
 }
+#[derive(Serialize)]
+pub struct CreateUserResponse {
+    token: String,
+}
 
 pub async fn create_user(
     State(pool): State<PgPool>,
+    jwt_ext: Extension<Arc<JwtExt>>,
     extract::Json(payload): extract::Json<CreateUser>,
-) -> Result<impl IntoResponse, StatusCode> {
+) -> Result<Json<CreateUserResponse>, StatusCode> {
     let user = sqlx::query_as!(
         User,
         "INSERT INTO users (sign, name, email, password) values ($1, $2, $3, $4) RETURNING id",
@@ -35,7 +45,6 @@ pub async fn create_user(
     .await
     .unwrap();
 
-    println!("id {}", user.id);
-
-    Ok(StatusCode::CREATED)
+    let token = jwt::create_token(user.id as i64, &payload.email, &jwt_ext.secret);
+    Ok(Json(CreateUserResponse { token }))
 }

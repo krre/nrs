@@ -42,13 +42,16 @@ pub async fn create_user(
         payload.password
     )
     .fetch_one(&pool)
-    .await
-    .unwrap();
+    .await;
 
-    let token = jwt::create_token(user.id as i64, &payload.email, &jwt_ext.secret);
+    if let Ok(user) = user {
+        let token = jwt::create_token(user.id as i64, &payload.email, &jwt_ext.secret);
 
-    if let Ok(token) = token {
-        Ok(Json(CreateUserResponse { token }))
+        if let Ok(token) = token {
+            Ok(Json(CreateUserResponse { token }))
+        } else {
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
     } else {
         Err(StatusCode::INTERNAL_SERVER_ERROR)
     }

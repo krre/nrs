@@ -4,6 +4,7 @@ use axum::{
 };
 use sqlx::{Pool, Postgres};
 use std::sync::Arc;
+use tower_http::trace::TraceLayer;
 
 use crate::api;
 
@@ -24,6 +25,7 @@ impl Router {
         let router = axum::Router::new()
             .route("/users", post(api::user::create_user))
             .with_state(pool)
+            .layer(TraceLayer::new_for_http())
             .layer(Extension(jwt_ext));
 
         Self {

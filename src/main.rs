@@ -4,7 +4,6 @@ use nrs::core::Application;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    env_logger::builder().format_timestamp(None).init();
     dotenvy::dotenv().ok();
 
     Application::new()?.run().await?;

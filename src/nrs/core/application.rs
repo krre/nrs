@@ -7,7 +7,8 @@ use sqlx;
 use sqlx::postgres::PgPoolOptions;
 
 use clap::Parser;
-use log::info;
+use tracing::info;
+use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 
 use crate::core::router;
 
@@ -30,6 +31,12 @@ pub struct Application {
 impl Application {
     pub fn new() -> Result<Self, Box<dyn Error>> {
         let config = Config::parse();
+
+        tracing_subscriber::registry()
+            .with(tracing_subscriber::EnvFilter::new(&config.rust_log))
+            .with(tracing_subscriber::fmt::layer())
+            .init();
+
         Ok(Self { config })
     }
 

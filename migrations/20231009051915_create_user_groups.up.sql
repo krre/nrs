@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     sign TEXT NOT NULL,
     name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
-    password TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );

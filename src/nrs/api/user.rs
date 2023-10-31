@@ -33,6 +33,24 @@ pub async fn create_user(
     jwt_ext: Extension<Arc<JwtExt>>,
     extract::Json(payload): extract::Json<CreateUser>,
 ) -> Result<Json<CreateUserResponse>, StatusCode> {
+    let id = sqlx::query("SELECT id FROM users WHERE email = $1")
+        .bind(&payload.email)
+        .fetch_one(&pool)
+        .await;
+
+    if id.is_ok() {
+        return Err(StatusCode::CONFLICT);
+    }
+
+    let id = sqlx::query("SELECT id FROM users WHERE sign = $1")
+        .bind(&payload.sign)
+        .fetch_one(&pool)
+        .await;
+
+    if id.is_ok() {
+        return Err(StatusCode::CONFLICT);
+    }
+
     let user = sqlx::query_as!(
         User,
         "INSERT INTO users (sign, name, email, password) values ($1, $2, $3, $4) RETURNING id",

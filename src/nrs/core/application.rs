@@ -34,7 +34,7 @@ impl Application {
 
         tracing_subscriber::registry()
             .with(tracing_subscriber::EnvFilter::new(&config.rust_log))
-            .with(tracing_subscriber::fmt::layer())
+            .with(tracing_subscriber::fmt::layer().without_time())
             .init();
 
         Ok(Self { config })

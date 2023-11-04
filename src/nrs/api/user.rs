@@ -8,6 +8,7 @@ use axum::{
 
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
+use tracing::error;
 
 use crate::core::jwt;
 use crate::core::router::JwtExt;
@@ -33,24 +34,6 @@ pub async fn create_user(
     jwt_ext: Extension<Arc<JwtExt>>,
     extract::Json(payload): extract::Json<CreateUser>,
 ) -> Result<Json<CreateUserResponse>, StatusCode> {
-    let id = sqlx::query("SELECT id FROM users WHERE email = $1")
-        .bind(&payload.email)
-        .fetch_one(&pool)
-        .await;
-
-    if id.is_ok() {
-        return Err(StatusCode::CONFLICT);
-    }
-
-    let id = sqlx::query("SELECT id FROM users WHERE sign = $1")
-        .bind(&payload.sign)
-        .fetch_one(&pool)
-        .await;
-
-    if id.is_ok() {
-        return Err(StatusCode::CONFLICT);
-    }
-
     let user = sqlx::query_as!(
         User,
         "INSERT INTO users (sign, name, email, password) values ($1, $2, $3, $4) RETURNING id",
@@ -62,15 +45,32 @@ pub async fn create_user(
     .fetch_one(&pool)
     .await;
 
-    if let Ok(user) = user {
-        let token = jwt::create_token(user.id as i64, &payload.email, &jwt_ext.secret);
+    match user {
+        Ok(user) => {
+            let token = jwt::create_token(user.id as i64, &payload.email, &jwt_ext.secret);
 
-        if let Ok(token) = token {
-            Ok(Json(CreateUserResponse { token }))
-        } else {
-            Err(StatusCode::INTERNAL_SERVER_ERROR)
+            match token {
+                Ok(token) => {
+                    return Ok(Json(CreateUserResponse { token }));
+                }
+                Err(error) => {
+                    error!("cannot create token: {}", error);
+                    return Err(StatusCode::INTERNAL_SERVER_ERROR);
+                }
+            }
         }
-    } else {
-        Err(StatusCode::INTERNAL_SERVER_ERROR)
+        Err(error) => match error {
+            sqlx::Error::Database(database_error) => {
+                if database_error.is_unique_violation() {
+                    return Err(StatusCode::CONFLICT);
+                }
+            }
+            _ => {
+                error!("database error: {}", error);
+                return Err(StatusCode::INTERNAL_SERVER_ERROR);
+            }
+        },
     }
+
+    Err(StatusCode::INTERNAL_SERVER_ERROR)
 }

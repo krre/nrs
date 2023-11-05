@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     id serial PRIMARY KEY,
     group_id INT NOT NULL DEFAULT 1 REFERENCES user_groups(id) ON DELETE CASCADE ON UPDATE CASCADE,
     login TEXT NOT NULL UNIQUE,
-    name TEXT NOT NULL,
+    full_name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
     created_at timestamptz NOT NULL DEFAULT now(),

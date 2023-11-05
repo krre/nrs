@@ -15,7 +15,7 @@ use crate::core::router::JwtExt;
 
 #[derive(Deserialize)]
 pub struct CreateUser {
-    sign: String,
+    login: String,
     name: String,
     email: String,
     password: String,
@@ -36,8 +36,8 @@ pub async fn create_user(
 ) -> Result<Json<CreateUserResponse>, StatusCode> {
     let user = sqlx::query_as!(
         User,
-        "INSERT INTO users (sign, name, email, password) values ($1, $2, $3, $4) RETURNING id",
-        payload.sign,
+        "INSERT INTO users (login, name, email, password) values ($1, $2, $3, $4) RETURNING id",
+        payload.login,
         payload.name,
         payload.email,
         payload.password

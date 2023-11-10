@@ -21,6 +21,13 @@ pub struct CreateUser {
     password: String,
 }
 
+#[derive(Serialize)]
+pub struct UserProfile {
+    login: String,
+    full_name: String,
+    email: String,
+}
+
 #[derive(Deserialize)]
 pub struct LoginUser {
     email: String,
@@ -130,4 +137,12 @@ pub async fn login(
             }
         },
     }
+}
+
+pub async fn get_user() -> Result<Json<UserProfile>, StatusCode> {
+    Ok(Json(UserProfile {
+        login: "login".to_string(),
+        full_name: "full_name".to_string(),
+        email: "email".to_string(),
+    }))
 }

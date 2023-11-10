@@ -1,5 +1,5 @@
 use axum::{
-    routing::{post, IntoMakeService},
+    routing::{get, post, IntoMakeService},
     Extension,
 };
 use sqlx::{Pool, Postgres};
@@ -25,6 +25,7 @@ impl Router {
         let router = axum::Router::new()
             .route("/users", post(api::user::create_user))
             .route("/users/login", post(api::user::login))
+            .route("/user", get(api::user::get_user))
             .with_state(pool)
             .layer(TraceLayer::new_for_http())
             .layer(Extension(jwt_ext));

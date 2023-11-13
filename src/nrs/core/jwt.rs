@@ -1,5 +1,4 @@
 use std::{
-    fmt::{self, Display},
     ops::Add,
     time::{Duration, SystemTime},
 };
@@ -7,6 +6,7 @@ use std::{
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use sqlx::types::time::OffsetDateTime;
+use thiserror::Error;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
@@ -15,19 +15,9 @@ struct Claims {
     exp: usize,
 }
 
-pub struct Error(jsonwebtoken::errors::Error);
-
-impl From<jsonwebtoken::errors::Error> for Error {
-    fn from(value: jsonwebtoken::errors::Error) -> Self {
-        Self { 0: value }
-    }
-}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
+#[derive(Error, Debug)]
+#[error("jsonwebtoken error: {0}")]
+pub struct Error(#[from] jsonwebtoken::errors::Error);
 
 pub fn create_token(user_id: i64, email: &str, secret: &str) -> Result<String, Error> {
     let from_now = Duration::from_secs(3600 * 24 * 365 * 10); // 10 years

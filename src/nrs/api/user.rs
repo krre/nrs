@@ -34,10 +34,6 @@ pub struct LoginUser {
     password: String,
 }
 
-struct User {
-    id: i32,
-}
-
 #[derive(Serialize)]
 pub struct CreateUserResponse {
     token: String,
@@ -48,6 +44,10 @@ pub async fn create_user(
     jwt_ext: Extension<Arc<JwtExt>>,
     extract::Json(payload): extract::Json<CreateUser>,
 ) -> Result<Json<CreateUserResponse>, StatusCode> {
+    struct User {
+        id: i32,
+    }
+
     let user = sqlx::query_as!(
         User,
         "INSERT INTO users (login, full_name, email, password) values ($1, $2, $3, $4) RETURNING id",

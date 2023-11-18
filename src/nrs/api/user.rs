@@ -145,11 +145,20 @@ pub async fn login(
     }
 }
 
-pub async fn get_user(AuthUser(user_id): AuthUser) -> Result<Json<UserProfile>, Error> {
+pub async fn get_user(
+    State(pool): State<PgPool>,
+    AuthUser(user_id): AuthUser,
+) -> Result<Json<UserProfile>, Error> {
     println!("id {}", user_id);
-    Ok(Json(UserProfile {
-        login: "login".to_string(),
-        full_name: "full_name".to_string(),
-        email: "email".to_string(),
-    }))
+
+    let user = sqlx::query_as!(
+        UserProfile,
+        "SELECT login, full_name, email FROM users WHERE id = $1",
+        user_id as i32,
+    )
+    .fetch_one(&pool)
+    .await
+    .map_err(|e| Error::InternalServerError(format!("database error: {}", e)))?;
+
+    Ok(Json(user))
 }

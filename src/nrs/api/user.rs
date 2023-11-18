@@ -8,8 +8,10 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
+use crate::core::jwt;
 use crate::core::router::JwtExt;
-use crate::{app::error::Error, core::jwt};
+
+use super::error::Error;
 
 #[derive(Deserialize)]
 pub struct CreateUser {

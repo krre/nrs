@@ -42,7 +42,7 @@ pub struct CreateUserResponse {
 pub async fn create_user(
     State(pool): State<PgPool>,
     jwt_ext: Extension<Arc<JwtExt>>,
-    extract::Json(payload): extract::Json<CreateUser>,
+    payload: extract::Json<CreateUser>,
 ) -> Result<Json<CreateUserResponse>, Error> {
     struct User {
         id: i32,
@@ -96,7 +96,7 @@ pub async fn create_user(
 pub async fn login(
     State(pool): State<PgPool>,
     jwt_ext: Extension<Arc<JwtExt>>,
-    extract::Json(payload): extract::Json<LoginUser>,
+    payload: extract::Json<LoginUser>,
 ) -> Result<Json<CreateUserResponse>, Error> {
     struct User {
         id: i32,

@@ -2,16 +2,14 @@ use std::sync::Arc;
 
 use axum::{
     extract::{self, State},
-    http::StatusCode,
     Extension, Json,
 };
 
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
-use tracing::error;
 
-use crate::core::jwt;
 use crate::core::router::JwtExt;
+use crate::{app::error::Error, core::jwt};
 
 #[derive(Deserialize)]
 pub struct CreateUser {
@@ -43,7 +41,7 @@ pub async fn create_user(
     State(pool): State<PgPool>,
     jwt_ext: Extension<Arc<JwtExt>>,
     extract::Json(payload): extract::Json<CreateUser>,
-) -> Result<Json<CreateUserResponse>, StatusCode> {
+) -> Result<Json<CreateUserResponse>, Error> {
     struct User {
         id: i32,
     }
@@ -68,32 +66,36 @@ pub async fn create_user(
                     return Ok(Json(CreateUserResponse { token }));
                 }
                 Err(error) => {
-                    error!("cannot create token: {}", error);
-                    return Err(StatusCode::INTERNAL_SERVER_ERROR);
+                    return Err(Error::InternalServerError(format!(
+                        "cannot create token: {}",
+                        error
+                    )));
                 }
             }
         }
         Err(error) => match error {
             sqlx::Error::Database(database_error) => {
                 if database_error.is_unique_violation() {
-                    return Err(StatusCode::CONFLICT);
+                    return Err(Error::Conflict);
                 }
             }
             _ => {
-                error!("database error: {}", error);
-                return Err(StatusCode::INTERNAL_SERVER_ERROR);
+                return Err(Error::InternalServerError(format!(
+                    "database error: {}",
+                    error
+                )));
             }
         },
     }
 
-    Err(StatusCode::INTERNAL_SERVER_ERROR)
+    Err(Error::InternalServerError("Unexpected error".to_string()))
 }
 
 pub async fn login(
     State(pool): State<PgPool>,
     jwt_ext: Extension<Arc<JwtExt>>,
     extract::Json(payload): extract::Json<LoginUser>,
-) -> Result<Json<CreateUserResponse>, StatusCode> {
+) -> Result<Json<CreateUserResponse>, Error> {
     struct User {
         id: i32,
         password: String,
@@ -110,8 +112,7 @@ pub async fn login(
     match user {
         Ok(user) => {
             if user.password != payload.password {
-                error!("wrong password");
-                return Err(StatusCode::UNAUTHORIZED);
+                return Err(Error::Unauthorized("wrong password".to_string()));
             }
 
             let token = jwt::create_token(user.id as i64, &payload.email, &jwt_ext.secret);
@@ -121,25 +122,28 @@ pub async fn login(
                     return Ok(Json(CreateUserResponse { token }));
                 }
                 Err(error) => {
-                    error!("cannot create token: {}", error);
-                    return Err(StatusCode::INTERNAL_SERVER_ERROR);
+                    return Err(Error::InternalServerError(format!(
+                        "cannot create token: {}",
+                        error
+                    )));
                 }
             }
         }
         Err(error) => match error {
             sqlx::Error::RowNotFound => {
-                error!("email `{}` not found", payload.email);
-                return Err(StatusCode::NOT_FOUND);
+                return Err(Error::NotFound(format!("email `{}` not found", error)));
             }
             _ => {
-                error!("database error: {}", error);
-                return Err(StatusCode::INTERNAL_SERVER_ERROR);
+                return Err(Error::InternalServerError(format!(
+                    "database error: {}",
+                    error
+                )));
             }
         },
     }
 }
 
-pub async fn get_user() -> Result<Json<UserProfile>, StatusCode> {
+pub async fn get_user() -> Result<Json<UserProfile>, Error> {
     Ok(Json(UserProfile {
         login: "login".to_string(),
         full_name: "full_name".to_string(),

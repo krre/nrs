@@ -16,6 +16,8 @@ pub enum Error {
     #[error("Resource already exists")]
     Conflict,
     #[error("{0}")]
+    BadRequest(String),
+    #[error("{0}")]
     InternalServerError(String),
 }
 
@@ -25,6 +27,7 @@ impl IntoResponse for Error {
             Self::Unauthorized(err) => (StatusCode::UNAUTHORIZED, err),
             Self::NotFound(err) => (StatusCode::NOT_FOUND, err),
             Self::Conflict => (StatusCode::CONFLICT, Self::Conflict.to_string()),
+            Self::BadRequest(err) => (StatusCode::BAD_REQUEST, err),
             Self::InternalServerError(err) => (StatusCode::INTERNAL_SERVER_ERROR, err),
         };
 

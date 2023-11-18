@@ -9,7 +9,7 @@ name = "nrs"
 path = "src/nrs/lib.rs"
 
 [dependencies]
-axum = { version = "0.6.20", features = ["json"] }
+axum = { version = "0.6.20", features = ["json", "headers"] }
 clap = { version = "4.4.4", features = ["env", "derive"] }
 dotenvy = "0.15.7"
 jsonwebtoken = "9.1.0"

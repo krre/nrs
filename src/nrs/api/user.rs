@@ -11,7 +11,7 @@ use sqlx::PgPool;
 use crate::core::jwt;
 use crate::core::router::JwtExt;
 
-use super::error::Error;
+use super::{error::Error, extract::auth_user::AuthUser};
 
 #[derive(Deserialize)]
 pub struct CreateUser {
@@ -145,7 +145,8 @@ pub async fn login(
     }
 }
 
-pub async fn get_user() -> Result<Json<UserProfile>, Error> {
+pub async fn get_user(AuthUser(user_id): AuthUser) -> Result<Json<UserProfile>, Error> {
+    println!("id {}", user_id);
     Ok(Json(UserProfile {
         login: "login".to_string(),
         full_name: "full_name".to_string(),

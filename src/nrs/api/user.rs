@@ -61,19 +61,9 @@ pub async fn create_user(
 
     match user {
         Ok(user) => {
-            let token = jwt::create_token(user.id as i64, &payload.email, &jwt_ext.secret);
-
-            match token {
-                Ok(token) => {
-                    return Ok(Json(CreateUserResponse { token }));
-                }
-                Err(error) => {
-                    return Err(Error::InternalServerError(format!(
-                        "cannot create token: {}",
-                        error
-                    )));
-                }
-            }
+            let token = jwt::create_token(user.id as i64, &payload.email, &jwt_ext.secret)
+                .map_err(|e| Error::InternalServerError(format!("cannot create token: {}", e)))?;
+            return Ok(Json(CreateUserResponse { token }));
         }
         Err(error) => match error {
             sqlx::Error::Database(database_error) => {
@@ -117,19 +107,10 @@ pub async fn login(
                 return Err(Error::Unauthorized("wrong password".to_string()));
             }
 
-            let token = jwt::create_token(user.id as i64, &payload.email, &jwt_ext.secret);
+            let token = jwt::create_token(user.id as i64, &payload.email, &jwt_ext.secret)
+                .map_err(|e| Error::InternalServerError(format!("cannot create token: {}", e)))?;
 
-            match token {
-                Ok(token) => {
-                    return Ok(Json(CreateUserResponse { token }));
-                }
-                Err(error) => {
-                    return Err(Error::InternalServerError(format!(
-                        "cannot create token: {}",
-                        error
-                    )));
-                }
-            }
+            return Ok(Json(CreateUserResponse { token }));
         }
         Err(error) => match error {
             sqlx::Error::RowNotFound => {

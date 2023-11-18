@@ -11,7 +11,7 @@ use sqlx::PgPool;
 use crate::core::jwt;
 use crate::core::router::JwtExt;
 
-use super::{error::Error, extract::auth_user::AuthUser};
+use super::{extract::auth_user::AuthUser, Error, Result};
 
 #[derive(Deserialize)]
 pub struct CreateUser {
@@ -43,7 +43,7 @@ pub async fn create_user(
     State(pool): State<PgPool>,
     jwt_ext: Extension<Arc<JwtExt>>,
     payload: extract::Json<CreateUser>,
-) -> Result<Json<CreateUserResponse>, Error> {
+) -> Result<Json<CreateUserResponse>> {
     struct User {
         id: i32,
     }
@@ -87,7 +87,7 @@ pub async fn login(
     State(pool): State<PgPool>,
     jwt_ext: Extension<Arc<JwtExt>>,
     payload: extract::Json<LoginUser>,
-) -> Result<Json<CreateUserResponse>, Error> {
+) -> Result<Json<CreateUserResponse>> {
     struct User {
         id: i32,
         password: String,
@@ -129,7 +129,7 @@ pub async fn login(
 pub async fn get_user(
     State(pool): State<PgPool>,
     AuthUser(user_id): AuthUser,
-) -> Result<Json<UserProfile>, Error> {
+) -> Result<Json<UserProfile>> {
     println!("id {}", user_id);
 
     let user = sqlx::query_as!(

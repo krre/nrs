@@ -13,7 +13,7 @@ use crate::core::jwt;
 use crate::core::router::JwtExt;
 
 use super::{
-    extract::{auth_user::AuthUser, valid_payload::ValidPayload},
+    extract::{AuthUser, ValidPayload},
     Error, Result,
 };
 

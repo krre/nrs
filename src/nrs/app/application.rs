@@ -10,7 +10,7 @@ use clap::Parser;
 use tracing::info;
 use tracing_subscriber::{prelude::__tracing_subscriber_SubscriberExt, util::SubscriberInitExt};
 
-use crate::core::router;
+use crate::api::router;
 
 #[derive(Parser, Debug)]
 pub struct Config {

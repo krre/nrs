@@ -9,8 +9,8 @@ use axum::{
 };
 
 use crate::{
-    api,
-    core::{jwt, router::JwtExt},
+    api::{self, router::JwtExt},
+    core::jwt,
 };
 
 pub struct AuthUser(pub i64);

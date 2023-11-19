@@ -6,7 +6,7 @@ use sqlx::{Pool, Postgres};
 use std::sync::Arc;
 use tower_http::trace::TraceLayer;
 
-use crate::api;
+use super::endpoint;
 
 pub struct Router {
     axum_router: axum::Router,
@@ -23,9 +23,9 @@ impl Router {
         });
 
         let router = axum::Router::new()
-            .route("/users", post(api::endpoint::user::create_user))
-            .route("/users/login", post(api::endpoint::user::login))
-            .route("/user", get(api::endpoint::user::get_user))
+            .route("/users", post(endpoint::user::create_user))
+            .route("/users/login", post(endpoint::user::login))
+            .route("/user", get(endpoint::user::get_user))
             .with_state(pool)
             .layer(TraceLayer::new_for_http())
             .layer(Extension(jwt_ext));

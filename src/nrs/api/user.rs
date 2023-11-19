@@ -138,8 +138,6 @@ pub async fn get_user(
     State(pool): State<PgPool>,
     AuthUser(user_id): AuthUser,
 ) -> Result<Json<UserProfile>> {
-    println!("id {}", user_id);
-
     let user = sqlx::query_as!(
         UserProfile,
         "SELECT login, full_name, email FROM users WHERE id = $1",

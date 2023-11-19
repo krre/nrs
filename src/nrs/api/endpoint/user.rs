@@ -9,13 +9,11 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use validator::Validate;
 
-use crate::core::jwt;
-use crate::core::router::JwtExt;
-
-use super::{
-    extract::{AuthUser, ValidPayload},
-    Error, Result,
+use crate::{
+    api::extract::{AuthUser, ValidPayload},
+    core::jwt,
 };
+use crate::{api::Error, api::Result, core::router::JwtExt};
 
 #[derive(Deserialize, Validate)]
 pub struct CreateUser {

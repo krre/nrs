@@ -23,9 +23,9 @@ impl Router {
         });
 
         let router = axum::Router::new()
-            .route("/users", post(api::user::create_user))
-            .route("/users/login", post(api::user::login))
-            .route("/user", get(api::user::get_user))
+            .route("/users", post(api::endpoint::user::create_user))
+            .route("/users/login", post(api::endpoint::user::login))
+            .route("/user", get(api::endpoint::user::get_user))
             .with_state(pool)
             .layer(TraceLayer::new_for_http())
             .layer(Extension(jwt_ext));

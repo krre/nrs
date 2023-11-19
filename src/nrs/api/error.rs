@@ -9,6 +9,10 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Error, Debug)]
 pub enum Error {
+    #[error(transparent)]
+    ValidationError(#[from] validator::ValidationErrors),
+    #[error(transparent)]
+    JsonRejection(#[from] axum::extract::rejection::JsonRejection),
     #[error("{0}")]
     Unauthorized(String),
     #[error("{0}")]
@@ -24,6 +28,11 @@ pub enum Error {
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
         let (status, message) = match self {
+            Self::ValidationError(_) => {
+                let message = format!("Input validation error: [{self}]").replace('\n', ", ");
+                (StatusCode::BAD_REQUEST, message)
+            }
+            Self::JsonRejection(err) => (StatusCode::BAD_REQUEST, err.to_string()),
             Self::Unauthorized(err) => (StatusCode::UNAUTHORIZED, err),
             Self::NotFound(err) => (StatusCode::NOT_FOUND, err),
             Self::Conflict => (StatusCode::CONFLICT, Self::Conflict.to_string()),

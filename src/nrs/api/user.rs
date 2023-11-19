@@ -7,17 +7,25 @@ use axum::{
 
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
+use validator::Validate;
 
 use crate::core::jwt;
 use crate::core::router::JwtExt;
 
-use super::{extract::auth_user::AuthUser, Error, Result};
+use super::{
+    extract::{auth_user::AuthUser, valid_payload::ValidPayload},
+    Error, Result,
+};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Validate)]
 pub struct CreateUser {
+    #[validate(length(min = 1))]
     login: String,
+    #[validate(length(min = 1))]
     full_name: String,
+    #[validate(email)]
     email: String,
+    #[validate(length(min = 1))]
     password: String,
 }
 
@@ -42,7 +50,7 @@ pub struct CreateUserResponse {
 pub async fn create_user(
     State(pool): State<PgPool>,
     jwt_ext: Extension<Arc<JwtExt>>,
-    payload: extract::Json<CreateUser>,
+    ValidPayload(payload): ValidPayload<CreateUser>,
 ) -> Result<Json<CreateUserResponse>> {
     struct User {
         id: i32,

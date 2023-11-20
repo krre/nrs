@@ -41,7 +41,7 @@ where
     };
 
     if let Ok(body) = std::str::from_utf8(&bytes) {
-        tracing::info!("{direction} body = {body:?}");
+        tracing::info!("{direction} body = {body}");
     }
 
     Ok(bytes)

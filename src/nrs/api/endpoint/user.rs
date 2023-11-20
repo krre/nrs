@@ -150,3 +150,12 @@ pub async fn get_user(
 
     Ok(Json(user))
 }
+
+pub async fn delete_user(State(pool): State<PgPool>, AuthUser(user_id): AuthUser) -> Result<()> {
+    sqlx::query!("DELETE FROM users WHERE id = $1", user_id as i32,)
+        .execute(&pool)
+        .await
+        .map_err(|e| Error::InternalServerError(format!("database error: {}", e)))?;
+
+    Ok(())
+}

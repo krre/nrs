@@ -10,8 +10,11 @@ path = "src/nrs/lib.rs"
 
 [dependencies]
 axum = { version = "0.6.20", features = ["json", "headers"] }
+bytes = "1.5.0"
 clap = { version = "4.4.4", features = ["env", "derive"] }
 dotenvy = "0.15.7"
+futures-util = "0.3.29"
+hyper = { version = "1.0.1", features = ["full"] }
 jsonwebtoken = "9.1.0"
 serde = { version = "1.0.188", features = ["derive"] }
 sqlx = { version = "0.7.1", features = [

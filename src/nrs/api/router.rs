@@ -1,4 +1,5 @@
 use axum::{
+    middleware,
     routing::{get, post, IntoMakeService},
     Extension,
 };
@@ -6,7 +7,7 @@ use sqlx::{Pool, Postgres};
 use std::sync::Arc;
 use tower_http::trace::TraceLayer;
 
-use super::endpoint;
+use super::{endpoint, middleware::console::log_body};
 
 pub struct Router {
     axum_router: axum::Router,
@@ -28,7 +29,8 @@ impl Router {
             .route("/user", get(endpoint::user::get_user))
             .with_state(pool)
             .layer(TraceLayer::new_for_http())
-            .layer(Extension(jwt_ext));
+            .layer(Extension(jwt_ext))
+            .layer(middleware::from_fn(log_body));
 
         Self {
             axum_router: router,

@@ -23,11 +23,13 @@ impl Router {
             secret: jwt_secret.to_owned(),
         });
 
+        use endpoint::user;
+
         let router = axum::Router::new()
-            .route("/users", post(endpoint::user::create_user))
-            .route("/users/login", post(endpoint::user::login))
-            .route("/user", get(endpoint::user::get_user))
-            .route("/user", delete(endpoint::user::delete_user))
+            .route("/users", post(user::create))
+            .route("/users/login", post(user::login))
+            .route("/user", get(user::get))
+            .route("/user", delete(user::delete))
             .with_state(pool)
             .layer(TraceLayer::new_for_http())
             .layer(Extension(jwt_ext))

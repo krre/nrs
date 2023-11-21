@@ -48,7 +48,7 @@ pub struct CreateUserResponse {
     token: String,
 }
 
-pub async fn create_user(
+pub async fn create(
     State(pool): State<PgPool>,
     jwt_ext: Extension<Arc<JwtExt>>,
     ValidPayload(payload): ValidPayload<CreateUser>,
@@ -135,7 +135,7 @@ pub async fn login(
     }
 }
 
-pub async fn get_user(
+pub async fn get(
     State(pool): State<PgPool>,
     AuthUser(user_id): AuthUser,
 ) -> Result<Json<UserProfile>> {
@@ -151,7 +151,7 @@ pub async fn get_user(
     Ok(Json(user))
 }
 
-pub async fn delete_user(State(pool): State<PgPool>, AuthUser(user_id): AuthUser) -> Result<()> {
+pub async fn delete(State(pool): State<PgPool>, AuthUser(user_id): AuthUser) -> Result<()> {
     sqlx::query!("DELETE FROM users WHERE id = $1", user_id as i32,)
         .execute(&pool)
         .await

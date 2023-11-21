@@ -30,6 +30,12 @@ pub struct CreateUser {
     password: String,
 }
 
+#[derive(Deserialize, Validate)]
+pub struct UpdateUser {
+    #[validate(length(min = 1))]
+    full_name: String,
+}
+
 #[derive(Serialize)]
 pub struct UserProfile {
     login: String,
@@ -90,6 +96,23 @@ pub async fn create(
     }
 
     Err(Error::InternalServerError("Unexpected error".to_string()))
+}
+
+pub async fn update(
+    State(pool): State<PgPool>,
+    AuthUser(user_id): AuthUser,
+    ValidPayload(payload): ValidPayload<UpdateUser>,
+) -> Result<()> {
+    sqlx::query!(
+        "UPDATE users SET full_name = $1, updated_at = current_timestamp WHERE id = $2",
+        payload.full_name,
+        user_id as i32
+    )
+    .execute(&pool)
+    .await
+    .map_err(|e| Error::InternalServerError(format!("database error: {}", e)))?;
+
+    Ok(())
 }
 
 pub async fn login(

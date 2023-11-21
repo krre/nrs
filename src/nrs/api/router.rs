@@ -1,6 +1,6 @@
 use axum::{
     middleware,
-    routing::{delete, get, post, IntoMakeService},
+    routing::{delete, get, post, put, IntoMakeService},
     Extension,
 };
 use sqlx::{Pool, Postgres};
@@ -30,6 +30,7 @@ impl Router {
             .route("/users/login", post(user::login))
             .route("/user", get(user::get))
             .route("/user", delete(user::delete))
+            .route("/user", put(user::update))
             .with_state(pool)
             .layer(TraceLayer::new_for_http())
             .layer(Extension(jwt_ext))

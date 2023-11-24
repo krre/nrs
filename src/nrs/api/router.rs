@@ -31,6 +31,7 @@ impl Router {
             .route("/user", get(user::get))
             .route("/user", delete(user::delete))
             .route("/user", put(user::update))
+            .route("/user/password", put(user::change_password))
             .with_state(pool)
             .layer(TraceLayer::new_for_http())
             .layer(Extension(jwt_ext))

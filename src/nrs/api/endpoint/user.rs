@@ -36,6 +36,14 @@ pub struct UpdateUser {
     full_name: String,
 }
 
+#[derive(Deserialize, Validate)]
+pub struct ChangePassword {
+    #[validate(length(min = 1))]
+    old_password: String,
+    #[validate(length(min = 1))]
+    new_password: String,
+}
+
 #[derive(Serialize)]
 pub struct UserProfile {
     login: String,
@@ -106,6 +114,23 @@ pub async fn update(
     sqlx::query!(
         "UPDATE users SET full_name = $1, updated_at = current_timestamp WHERE id = $2",
         payload.full_name,
+        user_id as i32
+    )
+    .execute(&pool)
+    .await
+    .map_err(|e| Error::InternalServerError(format!("database error: {}", e)))?;
+
+    Ok(())
+}
+
+pub async fn change_password(
+    State(pool): State<PgPool>,
+    AuthUser(user_id): AuthUser,
+    ValidPayload(payload): ValidPayload<ChangePassword>,
+) -> Result<()> {
+    sqlx::query!(
+        "UPDATE users SET password = $1, updated_at = current_timestamp WHERE id = $2",
+        payload.new_password,
         user_id as i32
     )
     .execute(&pool)

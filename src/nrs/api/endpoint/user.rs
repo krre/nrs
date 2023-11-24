@@ -9,7 +9,10 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use validator::Validate;
 
-use crate::{api::Error, api::Result};
+use crate::{
+    api::Error,
+    api::{self, Result},
+};
 use crate::{
     api::{
         extract::{AuthUser, ValidPayload},
@@ -94,12 +97,7 @@ pub async fn create(
                     return Err(Error::Conflict);
                 }
             }
-            _ => {
-                return Err(Error::InternalServerError(format!(
-                    "database error: {}",
-                    error
-                )));
-            }
+            _ => return Err(api::error::Error::DatabaseError(error)),
         },
     }
 
@@ -117,8 +115,7 @@ pub async fn update(
         user_id as i32
     )
     .execute(&pool)
-    .await
-    .map_err(|e| Error::InternalServerError(format!("database error: {}", e)))?;
+    .await?;
 
     Ok(())
 }
@@ -134,8 +131,7 @@ pub async fn change_password(
         user_id as i32
     )
     .execute(&pool)
-    .await
-    .map_err(|e| Error::InternalServerError(format!("database error: {}", e)))?;
+    .await?;
 
     Ok(())
 }
@@ -174,10 +170,7 @@ pub async fn login(
                 return Err(Error::NotFound(format!("email `{}` not found", error)));
             }
             _ => {
-                return Err(Error::InternalServerError(format!(
-                    "database error: {}",
-                    error
-                )));
+                return Err(api::error::Error::DatabaseError(error));
             }
         },
     }
@@ -193,8 +186,7 @@ pub async fn get(
         user_id as i32,
     )
     .fetch_one(&pool)
-    .await
-    .map_err(|e| Error::InternalServerError(format!("database error: {}", e)))?;
+    .await?;
 
     Ok(Json(user))
 }
@@ -202,8 +194,7 @@ pub async fn get(
 pub async fn delete(State(pool): State<PgPool>, AuthUser(user_id): AuthUser) -> Result<()> {
     sqlx::query!("DELETE FROM users WHERE id = $1", user_id as i32,)
         .execute(&pool)
-        .await
-        .map_err(|e| Error::InternalServerError(format!("database error: {}", e)))?;
+        .await?;
 
     Ok(())
 }

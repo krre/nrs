@@ -10,6 +10,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(Error, Debug)]
 pub enum Error {
     #[error(transparent)]
+    DatabaseError(#[from] sqlx::error::Error),
+    #[error(transparent)]
     ValidationError(#[from] validator::ValidationErrors),
     #[error(transparent)]
     JsonRejection(#[from] axum::extract::rejection::JsonRejection),
@@ -28,6 +30,7 @@ pub enum Error {
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
         let (status, message) = match self {
+            Self::DatabaseError(err) => (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()),
             Self::ValidationError(_) => {
                 let message = format!("Input validation error: [{self}]").replace('\n', ", ");
                 (StatusCode::BAD_REQUEST, message)

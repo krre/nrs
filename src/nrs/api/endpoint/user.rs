@@ -5,9 +5,7 @@ use axum::{
     Extension, Json,
 };
 
-use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
-use validator::Validate;
 
 use crate::{
     api::Error,
@@ -21,55 +19,66 @@ use crate::{
     core::jwt,
 };
 
-#[derive(Deserialize, Validate)]
-pub struct CreateUser {
-    #[validate(length(min = 1))]
-    login: String,
-    #[validate(length(min = 1))]
-    full_name: String,
-    #[validate(email)]
-    email: String,
-    #[validate(length(min = 1))]
-    password: String,
+mod request {
+    use serde::Deserialize;
+    use validator::Validate;
+
+    #[derive(Deserialize, Validate)]
+    pub struct Create {
+        #[validate(length(min = 1))]
+        pub login: String,
+        #[validate(length(min = 1))]
+        pub full_name: String,
+        #[validate(email)]
+        pub email: String,
+        #[validate(length(min = 1))]
+        pub password: String,
+    }
+
+    #[derive(Deserialize, Validate)]
+    pub struct Update {
+        #[validate(length(min = 1))]
+        pub full_name: String,
+    }
+
+    #[derive(Deserialize, Validate)]
+    pub struct ChangePassword {
+        #[validate(length(min = 1))]
+        pub old_password: String,
+        #[validate(length(min = 1))]
+        pub new_password: String,
+    }
+
+    #[derive(Deserialize, Validate)]
+    pub struct Login {
+        #[validate(email)]
+        pub email: String,
+        #[validate(length(min = 1))]
+        pub password: String,
+    }
 }
 
-#[derive(Deserialize, Validate)]
-pub struct UpdateUser {
-    #[validate(length(min = 1))]
-    full_name: String,
-}
+mod response {
+    use serde::Serialize;
 
-#[derive(Deserialize, Validate)]
-pub struct ChangePassword {
-    #[validate(length(min = 1))]
-    old_password: String,
-    #[validate(length(min = 1))]
-    new_password: String,
-}
+    #[derive(Serialize)]
+    pub struct Create {
+        pub token: String,
+    }
 
-#[derive(Serialize)]
-pub struct UserProfile {
-    login: String,
-    full_name: String,
-    email: String,
-}
-
-#[derive(Deserialize)]
-pub struct LoginUser {
-    email: String,
-    password: String,
-}
-
-#[derive(Serialize)]
-pub struct CreateUserResponse {
-    token: String,
+    #[derive(Serialize)]
+    pub struct Profile {
+        pub login: String,
+        pub full_name: String,
+        pub email: String,
+    }
 }
 
 pub async fn create(
     State(pool): State<PgPool>,
     jwt_ext: Extension<Arc<JwtExt>>,
-    ValidPayload(payload): ValidPayload<CreateUser>,
-) -> Result<Json<CreateUserResponse>> {
+    ValidPayload(payload): ValidPayload<request::Create>,
+) -> Result<Json<response::Create>> {
     struct User {
         id: i32,
     }
@@ -89,7 +98,7 @@ pub async fn create(
         Ok(user) => {
             let token = jwt::create_token(user.id as i64, &payload.email, &jwt_ext.secret)
                 .map_err(|e| Error::InternalServerError(format!("cannot create token: {}", e)))?;
-            return Ok(Json(CreateUserResponse { token }));
+            return Ok(Json(response::Create { token }));
         }
         Err(error) => match error {
             sqlx::Error::Database(database_error) => {
@@ -107,7 +116,7 @@ pub async fn create(
 pub async fn update(
     State(pool): State<PgPool>,
     AuthUser(user_id): AuthUser,
-    ValidPayload(payload): ValidPayload<UpdateUser>,
+    ValidPayload(payload): ValidPayload<request::Update>,
 ) -> Result<()> {
     sqlx::query!(
         "UPDATE users SET full_name = $1, updated_at = current_timestamp WHERE id = $2",
@@ -123,7 +132,7 @@ pub async fn update(
 pub async fn change_password(
     State(pool): State<PgPool>,
     AuthUser(user_id): AuthUser,
-    ValidPayload(payload): ValidPayload<ChangePassword>,
+    ValidPayload(payload): ValidPayload<request::ChangePassword>,
 ) -> Result<()> {
     sqlx::query!(
         "UPDATE users SET password = $1, updated_at = current_timestamp WHERE id = $2",
@@ -139,8 +148,8 @@ pub async fn change_password(
 pub async fn login(
     State(pool): State<PgPool>,
     jwt_ext: Extension<Arc<JwtExt>>,
-    payload: extract::Json<LoginUser>,
-) -> Result<Json<CreateUserResponse>> {
+    payload: extract::Json<request::Login>,
+) -> Result<Json<response::Create>> {
     struct User {
         id: i32,
         password: String,
@@ -163,7 +172,7 @@ pub async fn login(
             let token = jwt::create_token(user.id as i64, &payload.email, &jwt_ext.secret)
                 .map_err(|e| Error::InternalServerError(format!("cannot create token: {}", e)))?;
 
-            return Ok(Json(CreateUserResponse { token }));
+            return Ok(Json(response::Create { token }));
         }
         Err(error) => match error {
             sqlx::Error::RowNotFound => {
@@ -179,9 +188,9 @@ pub async fn login(
 pub async fn get(
     State(pool): State<PgPool>,
     AuthUser(user_id): AuthUser,
-) -> Result<Json<UserProfile>> {
+) -> Result<Json<response::Profile>> {
     let user = sqlx::query_as!(
-        UserProfile,
+        response::Profile,
         "SELECT login, full_name, email FROM users WHERE id = $1",
         user_id as i32,
     )

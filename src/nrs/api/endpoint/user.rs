@@ -134,6 +134,22 @@ pub async fn change_password(
     AuthUser(user_id): AuthUser,
     ValidPayload(payload): ValidPayload<request::ChangePassword>,
 ) -> Result<()> {
+    struct User {
+        password: String,
+    }
+
+    let user = sqlx::query_as!(
+        User,
+        "SELECT password FROM users WHERE id = $1",
+        user_id as i32
+    )
+    .fetch_one(&pool)
+    .await?;
+
+    if user.password != payload.old_password {
+        return Err(Error::BadRequest("invalid password".to_string()));
+    }
+
     sqlx::query!(
         "UPDATE users SET password = $1, updated_at = current_timestamp WHERE id = $2",
         payload.new_password,

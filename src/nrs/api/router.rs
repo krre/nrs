@@ -1,8 +1,4 @@
-use axum::{
-    middleware,
-    routing::{delete, get, post, put, IntoMakeService},
-    Extension,
-};
+use axum::{middleware, routing::IntoMakeService, Extension};
 use sqlx::{Pool, Postgres};
 use std::sync::Arc;
 use tower_http::trace::TraceLayer;
@@ -23,16 +19,8 @@ impl Router {
             secret: jwt_secret.to_owned(),
         });
 
-        use endpoint::user;
-
         let router = axum::Router::new()
-            .route("/users", post(user::create))
-            .route("/users/login", post(user::login))
-            .route("/user", get(user::get))
-            .route("/user", delete(user::delete))
-            .route("/user", put(user::update))
-            .route("/user/password", put(user::change_password))
-            .with_state(pool)
+            .nest("/user", endpoint::user::router::new(&pool))
             .layer(TraceLayer::new_for_http())
             .layer(Extension(jwt_ext))
             .layer(middleware::from_fn(log_body));

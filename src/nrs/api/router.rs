@@ -20,7 +20,7 @@ impl Router {
         });
 
         let router = axum::Router::new()
-            .nest("/user", endpoint::user::router::new(&pool))
+            .nest("/account", endpoint::account::router::new(&pool))
             .layer(TraceLayer::new_for_http())
             .layer(Extension(jwt_ext))
             .layer(middleware::from_fn(log_body));

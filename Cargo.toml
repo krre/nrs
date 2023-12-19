@@ -11,6 +11,7 @@ path = "src/nrs/lib.rs"
 [dependencies]
 axum = { version = "0.7.1", features = ["json"] }
 axum-extra = { version = "0.9.0", features = ["typed-header"] }
+chrono = { version = "0.4.31", features = ["serde"] }
 clap = { version = "4.4.4", features = ["env", "derive"] }
 dotenvy = "0.15.7"
 headers = "0.4.0"
@@ -22,6 +23,7 @@ sqlx = { version = "0.7.1", features = [
     "postgres",
     "runtime-tokio-rustls",
     "time",
+    "chrono",
 ] }
 thiserror = "1.0.50"
 tokio = { version = "1.32.0", features = ["full"] }

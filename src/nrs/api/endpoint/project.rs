@@ -108,7 +108,9 @@ mod handler {
     ) -> Result<Json<Vec<response::Project>>> {
         let projects = sqlx::query_as!(
             response::Project,
-            "SELECT id, name, template, description, created_at, updated_at FROM projects WHERE user_id = $1",
+            "SELECT id, name, template, description, created_at, updated_at FROM projects
+            WHERE user_id = $1
+            ORDER BY updated_at DESC",
             user_id as i32,
         )
         .fetch_all(&pool)

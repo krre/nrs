@@ -1,5 +1,5 @@
 pub(crate) mod router {
-    use axum::routing::{self, get, post};
+    use axum::routing::{self, get, post, put};
     use sqlx::{Pool, Postgres};
 
     use super::handler;
@@ -8,11 +8,13 @@ pub(crate) mod router {
         routing::Router::new()
             .route("/", get(handler::get))
             .route("/", post(handler::create))
+            .route("/:id", put(handler::update))
             .with_state(pool.clone())
     }
 }
 
 mod handler {
+    use axum::extract::Path;
     use axum::{extract::State, Json};
     use sqlx::PgPool;
 
@@ -28,6 +30,13 @@ mod handler {
             #[validate(length(min = 1))]
             pub name: String,
             pub template: i16,
+            pub description: String,
+        }
+
+        #[derive(Deserialize, Validate)]
+        pub struct Update {
+            #[validate(length(min = 1))]
+            pub name: String,
             pub description: String,
         }
     }
@@ -72,6 +81,25 @@ mod handler {
         .await?;
 
         Ok(Json(response::Create { id: project.id }))
+    }
+
+    pub async fn update(
+        Path(id): Path<i32>,
+        State(pool): State<PgPool>,
+        AuthUser(user_id): AuthUser,
+        ValidPayload(payload): ValidPayload<request::Update>,
+    ) -> Result<()> {
+        sqlx::query!(
+            "UPDATE projects SET name = $1, description = $2, updated_at = current_timestamp WHERE id = $3 AND user_id = $4",
+            payload.name,
+            payload.description,
+            id,
+            user_id as i32
+        )
+        .execute(&pool)
+        .await?;
+
+        Ok(())
     }
 
     pub async fn get(

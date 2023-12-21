@@ -1,5 +1,5 @@
 pub(crate) mod router {
-    use axum::routing::{self, get, post, put};
+    use axum::routing::{self, delete, get, post, put};
     use sqlx::{Pool, Postgres};
 
     use super::handler;
@@ -10,6 +10,7 @@ pub(crate) mod router {
             .route("/:id", get(handler::get_one))
             .route("/", post(handler::create))
             .route("/:id", put(handler::update))
+            .route("/:id", delete(handler::delete))
             .with_state(pool.clone())
     }
 }
@@ -136,5 +137,21 @@ mod handler {
         .await?;
 
         Ok(Json(project))
+    }
+
+    pub async fn delete(
+        Path(id): Path<i32>,
+        State(pool): State<PgPool>,
+        AuthUser(user_id): AuthUser,
+    ) -> Result<()> {
+        sqlx::query!(
+            "DELETE FROM projects WHERE id = $1 AND user_id = $2",
+            id,
+            user_id as i32,
+        )
+        .execute(&pool)
+        .await?;
+
+        Ok(())
     }
 }

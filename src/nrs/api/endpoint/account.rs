@@ -7,7 +7,7 @@ pub(crate) mod router {
     pub fn new(pool: &Pool<Postgres>) -> routing::Router {
         routing::Router::new()
             .route("/", post(handler::create))
-            .route("/", get(handler::get))
+            .route("/", get(handler::get_one))
             .route("/", delete(handler::delete))
             .route("/", put(handler::update))
             .route("/login", post(handler::login))
@@ -65,7 +65,7 @@ mod handler {
         }
 
         #[derive(Serialize)]
-        pub struct Profile {
+        pub struct Account {
             pub login: String,
             pub full_name: String,
             pub email: String,
@@ -218,12 +218,12 @@ mod handler {
         }
     }
 
-    pub async fn get(
+    pub async fn get_one(
         State(pool): State<PgPool>,
         AuthUser(user_id): AuthUser,
-    ) -> Result<Json<response::Profile>> {
+    ) -> Result<Json<response::Account>> {
         let user = sqlx::query_as!(
-            response::Profile,
+            response::Account,
             "SELECT login, full_name, email FROM users WHERE id = $1",
             user_id as i32,
         )

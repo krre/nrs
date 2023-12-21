@@ -6,7 +6,8 @@ pub(crate) mod router {
 
     pub fn new(pool: &Pool<Postgres>) -> routing::Router {
         routing::Router::new()
-            .route("/", get(handler::get))
+            .route("/", get(handler::get_all))
+            .route("/:id", get(handler::get_one))
             .route("/", post(handler::create))
             .route("/:id", put(handler::update))
             .with_state(pool.clone())
@@ -102,7 +103,7 @@ mod handler {
         Ok(())
     }
 
-    pub async fn get(
+    pub async fn get_all(
         State(pool): State<PgPool>,
         AuthUser(user_id): AuthUser,
     ) -> Result<Json<Vec<response::Project>>> {
@@ -117,5 +118,23 @@ mod handler {
         .await?;
 
         Ok(Json(projects))
+    }
+
+    pub async fn get_one(
+        Path(id): Path<i32>,
+        State(pool): State<PgPool>,
+        AuthUser(user_id): AuthUser,
+    ) -> Result<Json<response::Project>> {
+        let project = sqlx::query_as!(
+            response::Project,
+            "SELECT id, name, template, description, created_at, updated_at FROM projects
+            WHERE id = $1 AND user_id = $2",
+            id,
+            user_id as i32,
+        )
+        .fetch_one(&pool)
+        .await?;
+
+        Ok(Json(project))
     }
 }

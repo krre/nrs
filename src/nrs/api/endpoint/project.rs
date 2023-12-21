@@ -48,12 +48,12 @@ mod handler {
 
         #[derive(Serialize)]
         pub struct Create {
-            pub id: i32,
+            pub id: i64,
         }
 
         #[derive(Serialize)]
         pub struct Project {
-            pub id: i32,
+            pub id: i64,
             pub name: String,
             pub template: i16,
             pub description: String,
@@ -68,13 +68,13 @@ mod handler {
         ValidPayload(payload): ValidPayload<request::Create>,
     ) -> Result<Json<response::Create>> {
         struct Project {
-            id: i32,
+            id: i64,
         }
 
         let project = sqlx::query_as!(
             Project,
             "INSERT INTO projects (user_id, name, template, description) values ($1, $2, $3, $4) RETURNING id",
-            user_id as i32,
+            user_id,
             payload.name,
             payload.template,
             payload.description,
@@ -86,7 +86,7 @@ mod handler {
     }
 
     pub async fn update(
-        Path(id): Path<i32>,
+        Path(id): Path<i64>,
         State(pool): State<PgPool>,
         AuthUser(user_id): AuthUser,
         ValidPayload(payload): ValidPayload<request::Update>,
@@ -96,7 +96,7 @@ mod handler {
             payload.name,
             payload.description,
             id,
-            user_id as i32
+            user_id
         )
         .execute(&pool)
         .await?;
@@ -113,7 +113,7 @@ mod handler {
             "SELECT id, name, template, description, created_at, updated_at FROM projects
             WHERE user_id = $1
             ORDER BY updated_at DESC",
-            user_id as i32,
+            user_id,
         )
         .fetch_all(&pool)
         .await?;
@@ -122,7 +122,7 @@ mod handler {
     }
 
     pub async fn get_one(
-        Path(id): Path<i32>,
+        Path(id): Path<i64>,
         State(pool): State<PgPool>,
         AuthUser(user_id): AuthUser,
     ) -> Result<Json<response::Project>> {
@@ -131,7 +131,7 @@ mod handler {
             "SELECT id, name, template, description, created_at, updated_at FROM projects
             WHERE id = $1 AND user_id = $2",
             id,
-            user_id as i32,
+            user_id,
         )
         .fetch_one(&pool)
         .await?;
@@ -140,14 +140,14 @@ mod handler {
     }
 
     pub async fn delete(
-        Path(id): Path<i32>,
+        Path(id): Path<i64>,
         State(pool): State<PgPool>,
         AuthUser(user_id): AuthUser,
     ) -> Result<()> {
         sqlx::query!(
             "DELETE FROM projects WHERE id = $1 AND user_id = $2",
             id,
-            user_id as i32,
+            user_id,
         )
         .execute(&pool)
         .await?;

@@ -93,7 +93,7 @@ mod handler {
         ValidPayload(payload): ValidPayload<request::Create>,
     ) -> Result<Json<response::Create>> {
         struct User {
-            id: i32,
+            id: i64,
         }
 
         let user = sqlx::query_as!(
@@ -136,7 +136,7 @@ mod handler {
         sqlx::query!(
             "UPDATE users SET full_name = $1, updated_at = current_timestamp WHERE id = $2",
             payload.full_name,
-            user_id as i32
+            user_id
         )
         .execute(&pool)
         .await?;
@@ -153,13 +153,9 @@ mod handler {
             password: String,
         }
 
-        let user = sqlx::query_as!(
-            User,
-            "SELECT password FROM users WHERE id = $1",
-            user_id as i32
-        )
-        .fetch_one(&pool)
-        .await?;
+        let user = sqlx::query_as!(User, "SELECT password FROM users WHERE id = $1", user_id)
+            .fetch_one(&pool)
+            .await?;
 
         if user.password != payload.old_password {
             return Err(Error::BadRequest("invalid password".to_string()));
@@ -168,7 +164,7 @@ mod handler {
         sqlx::query!(
             "UPDATE users SET password = $1, updated_at = current_timestamp WHERE id = $2",
             payload.new_password,
-            user_id as i32
+            user_id
         )
         .execute(&pool)
         .await?;
@@ -182,7 +178,7 @@ mod handler {
         payload: axum::extract::Json<request::Login>,
     ) -> Result<Json<response::Create>> {
         struct User {
-            id: i32,
+            id: i64,
             password: String,
         }
 
@@ -225,7 +221,7 @@ mod handler {
         let user = sqlx::query_as!(
             response::Account,
             "SELECT login, full_name, email FROM users WHERE id = $1",
-            user_id as i32,
+            user_id,
         )
         .fetch_one(&pool)
         .await?;
@@ -234,7 +230,7 @@ mod handler {
     }
 
     pub async fn delete(State(pool): State<PgPool>, AuthUser(user_id): AuthUser) -> Result<()> {
-        sqlx::query!("DELETE FROM users WHERE id = $1", user_id as i32,)
+        sqlx::query!("DELETE FROM users WHERE id = $1", user_id,)
             .execute(&pool)
             .await?;
 

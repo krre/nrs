@@ -57,8 +57,8 @@ mod handler {
             pub name: String,
             pub template: i16,
             pub description: String,
-            pub created_at: chrono::DateTime<chrono::Utc>,
-            pub updated_at: chrono::DateTime<chrono::Utc>,
+            pub created_at: chrono::DateTime<chrono::Local>,
+            pub updated_at: chrono::DateTime<chrono::Local>,
         }
     }
 

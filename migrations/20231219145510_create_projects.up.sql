@@ -7,3 +7,5 @@ CREATE TABLE IF NOT EXISTS projects (
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+CREATE INDEX IF NOT EXISTS projects_user_id_idx ON projects (user_id);

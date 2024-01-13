@@ -19,4 +19,4 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX users_email_idx ON users (email);
+CREATE INDEX IF NOT EXISTS users_email_idx ON users (email);

@@ -6,3 +6,6 @@ CREATE TABLE IF NOT EXISTS modules (
     visibility smallint NOT NULL,
     updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+CREATE INDEX IF NOT EXISTS modules_project_id_idx ON modules (project_id);
+CREATE INDEX IF NOT EXISTS modules_module_id_idx ON modules (module_id);

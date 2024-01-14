@@ -2,18 +2,15 @@ pub(crate) mod router {
     use axum::routing::{self, delete, get, post, put};
     use sqlx::{Pool, Postgres};
 
-    use crate::api::endpoint;
-
     use super::handler;
 
-    pub fn new(pool: &Pool<Postgres>) -> routing::Router {
+    pub fn new(pool: &Pool<Postgres>) -> routing::Router<Pool<Postgres>> {
         routing::Router::new()
             .route("/", get(handler::get_all))
             .route("/:id", get(handler::get_one))
             .route("/", post(handler::create))
             .route("/:id", put(handler::update))
             .route("/:id", delete(handler::delete))
-            .nest("/:project_id/module", endpoint::module::router::new(&pool))
             .with_state(pool.clone())
     }
 }
@@ -23,7 +20,7 @@ mod handler {
     use axum::{extract::State, Json};
     use sqlx::PgPool;
 
-    use crate::api::extract::{AuthUser, ValidPayload};
+    use crate::api::extract::ValidPayload;
     use crate::api::Result;
 
     mod request {
@@ -32,17 +29,17 @@ mod handler {
 
         #[derive(Deserialize, Validate)]
         pub struct Create {
+            pub project_id: i64,
             #[validate(length(min = 1))]
             pub name: String,
-            pub template: i16,
-            pub description: String,
+            pub visibility: i16,
         }
 
         #[derive(Deserialize, Validate)]
         pub struct Update {
             #[validate(length(min = 1))]
             pub name: String,
-            pub description: String,
+            pub visibility: i16,
         }
     }
 
@@ -55,51 +52,47 @@ mod handler {
         }
 
         #[derive(Serialize)]
-        pub struct Project {
+        pub struct Module {
             pub id: i64,
+            pub project_id: i64,
             pub name: String,
-            pub template: i16,
-            pub description: String,
-            pub created_at: chrono::DateTime<chrono::Local>,
+            pub visibility: i16,
             pub updated_at: chrono::DateTime<chrono::Local>,
         }
     }
 
     pub async fn create(
+        Path(project_id): Path<i64>,
         State(pool): State<PgPool>,
-        AuthUser(user_id): AuthUser,
         ValidPayload(payload): ValidPayload<request::Create>,
     ) -> Result<Json<response::Create>> {
-        struct Project {
+        struct Module {
             id: i64,
         }
 
-        let project = sqlx::query_as!(
-            Project,
-            "INSERT INTO projects (user_id, name, template, description) values ($1, $2, $3, $4) RETURNING id",
-            user_id,
+        let module = sqlx::query_as!(
+            Module,
+            "INSERT INTO modules (project_id, name, visibility) values ($1, $2, $3) RETURNING id",
+            project_id,
             payload.name,
-            payload.template,
-            payload.description,
+            payload.visibility,
         )
         .fetch_one(&pool)
         .await?;
 
-        Ok(Json(response::Create { id: project.id }))
+        Ok(Json(response::Create { id: module.id }))
     }
 
     pub async fn update(
         Path(id): Path<i64>,
         State(pool): State<PgPool>,
-        AuthUser(user_id): AuthUser,
         ValidPayload(payload): ValidPayload<request::Update>,
     ) -> Result<()> {
         sqlx::query!(
-            "UPDATE projects SET name = $1, description = $2, updated_at = current_timestamp WHERE id = $3 AND user_id = $4",
+            "UPDATE modules SET name = $1, visibility = $2, updated_at = current_timestamp WHERE id = $3",
             payload.name,
-            payload.description,
+            payload.visibility,
             id,
-            user_id
         )
         .execute(&pool)
         .await?;
@@ -108,15 +101,15 @@ mod handler {
     }
 
     pub async fn get_all(
+        Path(project_id): Path<i64>,
         State(pool): State<PgPool>,
-        AuthUser(user_id): AuthUser,
-    ) -> Result<Json<Vec<response::Project>>> {
+    ) -> Result<Json<Vec<response::Module>>> {
         let projects = sqlx::query_as!(
-            response::Project,
-            "SELECT id, name, template, description, created_at, updated_at FROM projects
-            WHERE user_id = $1
+            response::Module,
+            "SELECT id, project_id, name, visibility, updated_at FROM modules
+            WHERE project_id = $1
             ORDER BY updated_at DESC",
-            user_id,
+            project_id,
         )
         .fetch_all(&pool)
         .await?;
@@ -127,14 +120,12 @@ mod handler {
     pub async fn get_one(
         Path(id): Path<i64>,
         State(pool): State<PgPool>,
-        AuthUser(user_id): AuthUser,
-    ) -> Result<Json<response::Project>> {
+    ) -> Result<Json<response::Module>> {
         let project = sqlx::query_as!(
-            response::Project,
-            "SELECT id, name, template, description, created_at, updated_at FROM projects
-            WHERE id = $1 AND user_id = $2",
+            response::Module,
+            "SELECT id, project_id, name, visibility, updated_at FROM modules
+            WHERE id = $1",
             id,
-            user_id,
         )
         .fetch_one(&pool)
         .await?;
@@ -142,18 +133,10 @@ mod handler {
         Ok(Json(project))
     }
 
-    pub async fn delete(
-        Path(id): Path<i64>,
-        State(pool): State<PgPool>,
-        AuthUser(user_id): AuthUser,
-    ) -> Result<()> {
-        sqlx::query!(
-            "DELETE FROM projects WHERE id = $1 AND user_id = $2",
-            id,
-            user_id,
-        )
-        .execute(&pool)
-        .await?;
+    pub async fn delete(Path(id): Path<i64>, State(pool): State<PgPool>) -> Result<()> {
+        sqlx::query!("DELETE FROM modules WHERE id = $1", id)
+            .execute(&pool)
+            .await?;
 
         Ok(())
     }

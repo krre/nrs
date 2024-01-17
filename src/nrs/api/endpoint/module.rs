@@ -30,6 +30,7 @@ mod handler {
         #[derive(Deserialize, Validate)]
         pub struct Create {
             pub project_id: i64,
+            pub module_id: Option<i64>,
             #[validate(length(min = 1))]
             pub name: String,
             pub visibility: i16,
@@ -37,6 +38,7 @@ mod handler {
 
         #[derive(Deserialize, Validate)]
         pub struct Update {
+            pub module_id: Option<i64>,
             #[validate(length(min = 1))]
             pub name: String,
             pub visibility: i16,
@@ -55,6 +57,7 @@ mod handler {
         pub struct Module {
             pub id: i64,
             pub project_id: i64,
+            pub module_id: Option<i64>,
             pub name: String,
             pub visibility: i16,
             pub updated_at: chrono::DateTime<chrono::Local>,
@@ -72,8 +75,9 @@ mod handler {
 
         let module = sqlx::query_as!(
             Module,
-            "INSERT INTO modules (project_id, name, visibility) values ($1, $2, $3) RETURNING id",
+            "INSERT INTO modules (project_id, module_id, name, visibility) values ($1, $2, $3, $4) RETURNING id",
             project_id,
+            payload.module_id,
             payload.name,
             payload.visibility,
         )
@@ -89,7 +93,8 @@ mod handler {
         ValidPayload(payload): ValidPayload<request::Update>,
     ) -> Result<()> {
         sqlx::query!(
-            "UPDATE modules SET name = $1, visibility = $2, updated_at = current_timestamp WHERE id = $3",
+            "UPDATE modules SET module_id = $1, name = $2, visibility = $3, updated_at = current_timestamp WHERE id = $4",
+            payload.module_id,
             payload.name,
             payload.visibility,
             id,
@@ -106,7 +111,7 @@ mod handler {
     ) -> Result<Json<Vec<response::Module>>> {
         let projects = sqlx::query_as!(
             response::Module,
-            "SELECT id, project_id, name, visibility, updated_at FROM modules
+            "SELECT id, project_id, module_id, name, visibility, updated_at FROM modules
             WHERE project_id = $1
             ORDER BY updated_at DESC",
             project_id,
@@ -123,7 +128,7 @@ mod handler {
     ) -> Result<Json<response::Module>> {
         let project = sqlx::query_as!(
             response::Module,
-            "SELECT id, project_id, name, visibility, updated_at FROM modules
+            "SELECT id, project_id, module_id, name, visibility, updated_at FROM modules
             WHERE id = $1",
             id,
         )

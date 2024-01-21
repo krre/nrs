@@ -1,3 +1,6 @@
+use crate::api::Result;
+use sqlx::PgPool;
+
 pub(crate) mod router {
     use axum::routing::{self, delete, get, post, put};
     use sqlx::{Pool, Postgres};
@@ -20,6 +23,7 @@ mod handler {
     use axum::{extract::State, Json};
     use sqlx::PgPool;
 
+    use crate::api::endpoint::module::next_module_suffix;
     use crate::api::extract::ValidPayload;
     use crate::api::Result;
 
@@ -29,11 +33,7 @@ mod handler {
 
         #[derive(Deserialize, Validate)]
         pub struct Create {
-            pub project_id: i64,
             pub module_id: Option<i64>,
-            #[validate(length(min = 1))]
-            pub name: String,
-            pub visibility: i16,
         }
 
         #[derive(Deserialize, Validate)]
@@ -73,13 +73,16 @@ mod handler {
             id: i64,
         }
 
+        let name = "Module.".to_owned()
+            + &next_module_suffix(project_id, payload.module_id, &pool).await?;
+
         let module = sqlx::query_as!(
             Module,
             "INSERT INTO modules (project_id, module_id, name, visibility) values ($1, $2, $3, $4) RETURNING id",
             project_id,
             payload.module_id,
-            payload.name,
-            payload.visibility,
+            name,
+            0,
         )
         .fetch_one(&pool)
         .await?;
@@ -145,4 +148,61 @@ mod handler {
 
         Ok(())
     }
+}
+
+async fn next_module_suffix(
+    project_id: i64,
+    module_id: Option<i64>,
+    pool: &PgPool,
+) -> Result<String> {
+    #[derive(Debug, sqlx::FromRow)]
+    struct Module {
+        name: String,
+    }
+
+    let mut query = sqlx::query_builder::QueryBuilder::new(
+        "SELECT name FROM modules
+        WHERE ",
+    );
+
+    query.push("project_id = ");
+    query.push_bind(project_id);
+
+    if let Some(module_id) = module_id {
+        query.push(" AND module_id = ");
+        query.push_bind(module_id);
+    } else {
+        query.push(" AND module_id IS NULL");
+    };
+
+    query.push(" ORDER BY name ASC");
+
+    let modules = query.build_query_as::<Module>().fetch_all(pool).await?;
+
+    let mut prev_num = 0;
+
+    for module in modules.iter() {
+        let mut name = module.name.chars();
+        let dot = name.nth(module.name.len() - 4);
+
+        if let Some(dot) = dot {
+            if dot != '.' {
+                continue;
+            };
+        } else {
+            continue;
+        }
+
+        let num = name.as_str().parse::<u32>();
+
+        if let Ok(num) = num {
+            if num - prev_num > 1 {
+                break;
+            }
+
+            prev_num = num;
+        }
+    }
+
+    Ok(format!("{:0>3}", prev_num + 1))
 }

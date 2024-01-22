@@ -51,6 +51,8 @@ mod handler {
         #[derive(Serialize)]
         pub struct Create {
             pub id: i64,
+            pub name: String,
+            pub visibility: i16,
         }
 
         #[derive(Serialize)]
@@ -76,18 +78,24 @@ mod handler {
         let name = "Module.".to_owned()
             + &next_module_suffix(project_id, payload.module_id, &pool).await?;
 
+        let visibility = 0;
+
         let module = sqlx::query_as!(
             Module,
             "INSERT INTO modules (project_id, module_id, name, visibility) values ($1, $2, $3, $4) RETURNING id",
             project_id,
             payload.module_id,
             name,
-            0,
+            visibility,
         )
         .fetch_one(&pool)
         .await?;
 
-        Ok(Json(response::Create { id: module.id }))
+        Ok(Json(response::Create {
+            id: module.id,
+            name,
+            visibility,
+        }))
     }
 
     pub async fn update(

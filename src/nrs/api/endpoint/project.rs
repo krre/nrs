@@ -34,7 +34,7 @@ mod handler {
         pub struct Create {
             #[validate(length(min = 1))]
             pub name: String,
-            pub template: i16,
+            pub target: i16,
             pub description: String,
         }
 
@@ -58,7 +58,7 @@ mod handler {
         pub struct Project {
             pub id: i64,
             pub name: String,
-            pub template: i16,
+            pub target: i16,
             pub description: String,
             pub created_at: chrono::DateTime<chrono::Local>,
             pub updated_at: chrono::DateTime<chrono::Local>,
@@ -76,10 +76,10 @@ mod handler {
 
         let project = sqlx::query_as!(
             Project,
-            "INSERT INTO projects (user_id, name, template, description) values ($1, $2, $3, $4) RETURNING id",
+            "INSERT INTO projects (user_id, name, target, description) values ($1, $2, $3, $4) RETURNING id",
             user_id,
             payload.name,
-            payload.template,
+            payload.target,
             payload.description,
         )
         .fetch_one(&pool)
@@ -113,7 +113,7 @@ mod handler {
     ) -> Result<Json<Vec<response::Project>>> {
         let projects = sqlx::query_as!(
             response::Project,
-            "SELECT id, name, template, description, created_at, updated_at FROM projects
+            "SELECT id, name, target, description, created_at, updated_at FROM projects
             WHERE user_id = $1
             ORDER BY updated_at DESC",
             user_id,
@@ -131,7 +131,7 @@ mod handler {
     ) -> Result<Json<response::Project>> {
         let project = sqlx::query_as!(
             response::Project,
-            "SELECT id, name, template, description, created_at, updated_at FROM projects
+            "SELECT id, name, target, description, created_at, updated_at FROM projects
             WHERE id = $1 AND user_id = $2",
             id,
             user_id,

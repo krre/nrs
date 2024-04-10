@@ -9,25 +9,25 @@ name = "nrs"
 path = "src/nrs/lib.rs"
 
 [dependencies]
-axum = { version = "0.7.1", features = ["json"] }
-axum-extra = { version = "0.9.0", features = ["typed-header"] }
-chrono = { version = "0.4.31", features = ["serde"] }
-clap = { version = "4.4.4", features = ["env", "derive"] }
+axum = { version = "0.7.5", features = ["json"] }
+axum-extra = { version = "0.9.3", features = ["typed-header"] }
+chrono = { version = "0.4.37", features = ["serde"] }
+clap = { version = "4.5.4", features = ["env", "derive"] }
 dotenvy = "0.15.7"
 headers = "0.4.0"
-http-body-util = "0.1.0"
-hyper = { version = "1.0.1", features = ["full"] }
-jsonwebtoken = "9.1.0"
-serde = { version = "1.0.188", features = ["derive"] }
-sqlx = { version = "0.7.1", features = [
+http-body-util = "0.1.1"
+hyper = { version = "1.2.0", features = ["full"] }
+jsonwebtoken = "9.3.0"
+serde = { version = "1.0.197", features = ["derive"] }
+sqlx = { version = "0.7.4", features = [
     "postgres",
     "runtime-tokio-rustls",
     "time",
     "chrono",
 ] }
-thiserror = "1.0.50"
-tokio = { version = "1.32.0", features = ["full"] }
-tower-http = { version = "0.5.0", features = ["trace"] }
+thiserror = "1.0.58"
+tokio = { version = "1.37.0", features = ["full"] }
+tower-http = { version = "0.5.2", features = ["trace"] }
 tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
-validator = { version = "0.16.1", features = ["derive"] }
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+validator = { version = "0.18.0", features = ["derive"] }

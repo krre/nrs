@@ -13,7 +13,7 @@ pub(crate) mod router {
             .route("/", post(handler::create))
             .route("/:id", put(handler::update))
             .route("/:id", delete(handler::delete))
-            .nest("/:project_id/module", endpoint::module::router::new(&pool))
+            .nest("/:project_id/modules", endpoint::module::router::new(&pool))
             .with_state(pool.clone())
     }
 }

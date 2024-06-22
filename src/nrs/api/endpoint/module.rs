@@ -122,7 +122,8 @@ mod handler {
     ) -> Result<Json<Vec<response::Module>>> {
         let projects = sqlx::query_as!(
             response::Module,
-            "SELECT id, project_id, module_id, name, visibility, updated_at FROM modules
+            "SELECT id, project_id, module_id, name, visibility, updated_at
+            FROM modules
             WHERE project_id = $1
             ORDER BY updated_at DESC",
             project_id,
@@ -139,7 +140,8 @@ mod handler {
     ) -> Result<Json<response::Module>> {
         let project = sqlx::query_as!(
             response::Module,
-            "SELECT id, project_id, module_id, name, visibility, updated_at FROM modules
+            "SELECT id, project_id, module_id, name, visibility, updated_at
+            FROM modules
             WHERE id = $1",
             id,
         )
@@ -168,10 +170,7 @@ async fn next_module_suffix(
         name: String,
     }
 
-    let mut query = sqlx::query_builder::QueryBuilder::new(
-        "SELECT name FROM modules
-        WHERE ",
-    );
+    let mut query = sqlx::query_builder::QueryBuilder::new("SELECT name FROM modules WHERE ");
 
     query.push("project_id = ");
     query.push_bind(project_id);

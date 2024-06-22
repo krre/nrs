@@ -113,7 +113,8 @@ mod handler {
     ) -> Result<Json<Vec<response::Project>>> {
         let projects = sqlx::query_as!(
             response::Project,
-            "SELECT id, name, target, description, created_at, updated_at FROM projects
+            "SELECT id, name, target, description, created_at, updated_at
+            FROM projects
             WHERE user_id = $1
             ORDER BY updated_at DESC",
             user_id,
@@ -131,7 +132,8 @@ mod handler {
     ) -> Result<Json<response::Project>> {
         let project = sqlx::query_as!(
             response::Project,
-            "SELECT id, name, target, description, created_at, updated_at FROM projects
+            "SELECT id, name, target, description, created_at, updated_at
+            FROM projects
             WHERE id = $1 AND user_id = $2",
             id,
             user_id,

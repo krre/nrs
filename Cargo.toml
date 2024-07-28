@@ -19,13 +19,15 @@ http-body-util = "0.1.1"
 hyper = { version = "1.2.0", features = ["full"] }
 jsonwebtoken = "9.3.0"
 serde = { version = "1.0.197", features = ["derive"] }
-sqlx = { version = "0.7.4", features = [
+serde_with = { version = "3.9.0", features = ["time_0_3"] }
+sqlx = { version = "0.8.0", features = [
     "postgres",
     "runtime-tokio-rustls",
     "time",
     "chrono",
 ] }
 thiserror = "1.0.58"
+time = "0.3.36"
 tokio = { version = "1.37.0", features = ["full"] }
 tower-http = { version = "0.5.2", features = ["trace"] }
 tracing = "0.1.40"

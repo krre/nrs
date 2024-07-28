@@ -48,6 +48,7 @@ mod handler {
 
     mod response {
         use serde::Serialize;
+        use time::OffsetDateTime;
 
         #[derive(Serialize)]
         pub struct Create {
@@ -60,8 +61,8 @@ mod handler {
             pub name: String,
             pub target: i16,
             pub description: String,
-            pub created_at: chrono::DateTime<chrono::Local>,
-            pub updated_at: chrono::DateTime<chrono::Local>,
+            pub created_at: OffsetDateTime,
+            pub updated_at: OffsetDateTime,
         }
     }
 

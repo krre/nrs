@@ -4,15 +4,12 @@ use crate::{
     api::{self, router::JwtExt},
     core::jwt,
 };
-use axum::{
-    async_trait, extract::FromRequestParts, http::request::Parts, Extension, RequestPartsExt,
-};
+use axum::{extract::FromRequestParts, http::request::Parts, Extension, RequestPartsExt};
 use axum_extra::TypedHeader;
 use headers::{authorization::Bearer, Authorization};
 
 pub struct AuthUser(pub i64);
 
-#[async_trait]
 impl<S> FromRequestParts<S> for AuthUser
 where
     S: Send + Sync,

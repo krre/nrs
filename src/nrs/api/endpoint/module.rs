@@ -10,10 +10,10 @@ pub(crate) mod router {
     pub fn new(pool: &Pool<Postgres>) -> routing::Router<Pool<Postgres>> {
         routing::Router::new()
             .route("/", get(handler::get_all))
-            .route("/:id", get(handler::get_one))
+            .route("/{id}", get(handler::get_one))
             .route("/", post(handler::create))
-            .route("/:id", put(handler::update))
-            .route("/:id", delete(handler::delete))
+            .route("/{id}", put(handler::update))
+            .route("/{id}", delete(handler::delete))
             .with_state(pool.clone())
     }
 }

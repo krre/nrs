@@ -9,11 +9,14 @@ pub(crate) mod router {
     pub fn new(pool: &Pool<Postgres>) -> routing::Router {
         routing::Router::new()
             .route("/", get(handler::get_all))
-            .route("/:id", get(handler::get_one))
+            .route("/{id}", get(handler::get_one))
             .route("/", post(handler::create))
-            .route("/:id", put(handler::update))
-            .route("/:id", delete(handler::delete))
-            .nest("/:project_id/modules", endpoint::module::router::new(&pool))
+            .route("/{id}", put(handler::update))
+            .route("/{id}", delete(handler::delete))
+            .nest(
+                "/{project_id}/modules",
+                endpoint::module::router::new(&pool),
+            )
             .with_state(pool.clone())
     }
 }

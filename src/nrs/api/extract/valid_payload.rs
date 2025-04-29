@@ -1,4 +1,4 @@
-use axum::{async_trait, body::Body, extract::FromRequest, http::Request, Json};
+use axum::{body::Body, extract::FromRequest, http::Request, Json};
 use serde::de::DeserializeOwned;
 use validator::Validate;
 
@@ -7,7 +7,6 @@ use crate::api;
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ValidPayload<T>(pub T);
 
-#[async_trait]
 impl<T, S> FromRequest<S> for ValidPayload<T>
 where
     T: DeserializeOwned + Validate,
